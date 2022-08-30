@@ -30,10 +30,22 @@ void loop() {
     digitalWrite(pin_bomba_acida, HIGH);
     digitalWrite(pin_bomba_alcalina, HIGH);
     delay(segundos_espera * 1000);
-    int lectura_phimetro = analogRead(pin_phimetro);
-    float voltaje_phimetro = float(lectura_phimetro)/1023*5;
+    float lectura_raw_promedio = 0;
+    for (int i=0; i < 10; i++) {
+        lectura_raw_promedio += analogRead(pin_phimetro);
+    }
+    lectura_raw_promedio /= 10;
+    float voltaje_phimetro = lectura_raw_promedio/1023*5;
+    float ph = (1-(voltaje_phimetro/5))*14;
+    String estado = "neutro";
+    if (ph < 7) {
+        estado = "ácido";
+    } else if (ph > 7) {
+        estado = "alcalino";
+    }
     Serial.println("----------------------------------------");
     Serial.println("Voltaje PHímetro: " + String(voltaje_phimetro));
+    Serial.println("PH: " + String(ph) + "    Entorno " + estado);
     if (voltaje_phimetro > voltaje_ph_maximo || voltaje_phimetro < voltaje_ph_minimo) {
         
         if (voltaje_phimetro < voltaje_ph_minimo) {
