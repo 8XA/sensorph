@@ -27,6 +27,9 @@ void setup() {
 
 
 void loop() {
+    digitalWrite(pin_bomba_acida, HIGH);
+    digitalWrite(pin_bomba_alcalina, HIGH);
+    delay(segundos_espera * 1000);
     int lectura_phimetro = analogRead(pin_phimetro);
     float voltaje_phimetro = float(lectura_phimetro)/1023*5;
     Serial.println("----------------------------------------");
@@ -35,10 +38,10 @@ void loop() {
         
         if (voltaje_phimetro < voltaje_ph_minimo) {
             Serial.println("\nEncendiendo bomba ácida...");
-            digitalWrite(pin_bomba_acida, HIGH);
+            digitalWrite(pin_bomba_acida, LOW);
         } else if (voltaje_phimetro > voltaje_ph_maximo) {
             Serial.println("\nEncendiendo bomba alcalina...");
-            digitalWrite(pin_bomba_alcalina, HIGH);
+            digitalWrite(pin_bomba_alcalina, LOW);
         }
 
         delay(segundos_bombeo * 1000);
@@ -47,7 +50,4 @@ void loop() {
         Serial.println("\nPH dentro del rango.");
     }
     Serial.println("----------------------------------------");
-    digitalWrite(pin_bomba_acida, LOW);
-    digitalWrite(pin_bomba_alcalina, LOW);
-    delay(segundos_espera * 1000);
 } 
