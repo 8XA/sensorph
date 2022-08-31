@@ -6,10 +6,11 @@ byte pin_bomba_alcalina = 12;
 
 //Debe ser un pin análogo
 byte pin_phimetro = A0;
+//milisegundos entre cada lectura que va a promediarse
+int ms_para_muestreo = 100;
 
-//Los segundos deben ser enteros
-int segundos_bombeo = 2;
-int segundos_espera = 3;
+float segundos_bombeo = 0.001;
+float segundos_espera = 3.0;
 
 //Rango de PH en el que las bombas no operan
 float voltaje_ph_maximo = 3.5;  // Mayor voltaje es igual a mayor acidez
@@ -33,6 +34,7 @@ void loop() {
     float lectura_raw_promedio = 0;
     for (int i=0; i < 10; i++) {
         lectura_raw_promedio += analogRead(pin_phimetro);
+        delay(ms_para_muestreo);
     }
     lectura_raw_promedio /= 10;
     float voltaje_phimetro = lectura_raw_promedio/1023*5;
@@ -44,20 +46,21 @@ void loop() {
         estado = "alcalino";
     }
     Serial.println("----------------------------------------");
-    Serial.println("Voltaje PHímetro: " + String(voltaje_phimetro));
+    Serial.println("Voltaje PHímetro: " + String(voltaje_phimetro) + "V");
     Serial.println("PH: " + String(ph) + "    Entorno " + estado);
     if (voltaje_phimetro > voltaje_ph_maximo || voltaje_phimetro < voltaje_ph_minimo) {
         
+        Serial.println("\nVoltaje deseado: " + String(voltaje_ph_minimo) + "V - " + String(voltaje_ph_maximo) + "V");
         if (voltaje_phimetro < voltaje_ph_minimo) {
-            Serial.println("\nEncendiendo bomba ácida...");
+            Serial.println("Enciende bomba ácida.");
             digitalWrite(pin_bomba_acida, LOW);
         } else if (voltaje_phimetro > voltaje_ph_maximo) {
-            Serial.println("\nEncendiendo bomba alcalina...");
+            Serial.println("Enciende bomba alcalina.");
             digitalWrite(pin_bomba_alcalina, LOW);
         }
 
         delay(segundos_bombeo * 1000);
-        Serial.println("Deteniendo bomba...");
+        Serial.println("Para bomba.");
     } else {
         Serial.println("\nPH dentro del rango.");
     }
