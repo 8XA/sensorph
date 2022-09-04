@@ -13,8 +13,16 @@ float segundos_bombeo = 0.001;
 float segundos_espera = 3.0;
 
 //Rango de PH en el que las bombas no operan
-float voltaje_ph_maximo = 3.5;  // Mayor voltaje es igual a mayor acidez
-float voltaje_ph_minimo = 3.0;  // Menor Voltaje es igual a mayor alcalinidad
+float ph_maximo = 7.5;
+float ph_minimo = 7.0;
+//-----------------------------------
+//      CALIBRACIÓN
+//-----------------------------------
+float muestra1_ph = 4.0;
+float muestra1_valor = 1000;
+
+float muestra2_ph = 10.0;
+float muestra2_valor = 400;
 //-----------------------------------
 //-----------------------------------
 
@@ -31,32 +39,36 @@ void loop() {
     digitalWrite(pin_bomba_acida, HIGH);
     digitalWrite(pin_bomba_alcalina, HIGH);
     delay(segundos_espera * 1000);
-    float lectura_raw_promedio = 0;
+
+    float sum_signal_value = 0;
     for (int i=0; i < 10; i++) {
-        lectura_raw_promedio += analogRead(pin_phimetro);
+        sum_signal_value += analogRead(pin_phimetro);
         delay(ms_para_muestreo);
     }
-    lectura_raw_promedio /= 10;
-    float voltaje_phimetro = lectura_raw_promedio/1023*5;
-    float ph = (1-(voltaje_phimetro/5))*14;
+    float avg_signal_value = sum_signal_value/10;
+    
+    float m = (muestra2_ph - muestra1_ph)/(muestra2_valor - muestra1_valor);
+    float offset = muestra1_ph - m * muestra1_valor;
+    float pH = m * avg_signal_value + offset;
+
     String estado = "neutro";
-    if (ph < 7) {
+    if (pH < 7) {
         estado = "ácido";
-    } else if (ph > 7) {
+    } else if (pH > 7) {
         estado = "alcalino";
     }
+    
     Serial.println("----------------------------------------");
-    Serial.println("Voltaje PHímetro: " + String(voltaje_phimetro) + "V");
-    Serial.println("PH: " + String(ph) + "    Entorno " + estado);
-    if (voltaje_phimetro > voltaje_ph_maximo || voltaje_phimetro < voltaje_ph_minimo) {
+    Serial.println("pH: " + String(pH) + "    Entorno " + estado);
+    if (pH > ph_maximo || pH < ph_minimo) {
         
-        Serial.println("\nVoltaje deseado: " + String(voltaje_ph_minimo) + "V - " + String(voltaje_ph_maximo) + "V");
-        if (voltaje_phimetro < voltaje_ph_minimo) {
-            Serial.println("Enciende bomba ácida.");
-            digitalWrite(pin_bomba_acida, LOW);
-        } else if (voltaje_phimetro > voltaje_ph_maximo) {
+        Serial.println("\npH deseado: " + String(ph_minimo) + " - " + String(ph_maximo));
+        if (pH < ph_minimo) {
             Serial.println("Enciende bomba alcalina.");
             digitalWrite(pin_bomba_alcalina, LOW);
+        } else if (pH > ph_maximo) {
+            Serial.println("Enciende bomba ácida.");
+            digitalWrite(pin_bomba_acida, LOW);
         }
 
         delay(segundos_bombeo * 1000);
